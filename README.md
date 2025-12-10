@@ -1,4 +1,4 @@
-# 🎨 AIA - 学术插图助手
+![AIA Logo](frontend/image.png)
 
 <div align="center">
 
@@ -89,7 +89,7 @@ npm run dev
 
 <div align="center">
 
-# 🎨 AIA - Academic Illustrator Agent
+![AIA Logo](frontend/image.png)
 
 [简体中文](#) | English
 

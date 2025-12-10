@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { Sparkles, Loader2, Paperclip, FileText, Image as ImageIcon, X } from 'lucide-react';
+import { Sparkles, Loader2, Paperclip, FileText, Image as ImageIcon, X, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useWorkflowStore } from '@/store/workflowStore';
@@ -20,9 +20,6 @@ interface UploadedFile {
 // PDF.js will be loaded dynamically
 let pdfjsLib: typeof import('pdfjs-dist') | null = null;
 
-/**
- * Load PDF.js dynamically (client-side only)
- */
 async function loadPdfJs() {
     if (pdfjsLib) return pdfjsLib;
     if (typeof window === 'undefined') return null;
@@ -33,9 +30,6 @@ async function loadPdfJs() {
     return pdfjs;
 }
 
-/**
- * Convert PDF to images using pdf.js in browser
- */
 async function convertPdfToImages(file: File): Promise<string[]> {
     const pdfjs = await loadPdfJs();
     if (!pdfjs) throw new Error('PDF.js not available');
@@ -46,7 +40,7 @@ async function convertPdfToImages(file: File): Promise<string[]> {
 
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const scale = 2; // Higher scale for better quality
+        const scale = 2;
         const viewport = page.getViewport({ scale });
 
         const canvas = document.createElement('canvas');
@@ -59,7 +53,6 @@ async function convertPdfToImages(file: File): Promise<string[]> {
             viewport: viewport,
         } as Parameters<typeof page.render>[0]).promise;
 
-        // Convert canvas to base64 PNG
         const imageData = canvas.toDataURL('image/png');
         images.push(imageData);
     }
@@ -82,9 +75,9 @@ export function ArchitectStep() {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [processedImages, setProcessedImages] = useState<string[]>([]);
     const [pdfJsReady, setPdfJsReady] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Preload PDF.js on mount (client-side only)
     useEffect(() => {
         loadPdfJs().then(() => setPdfJsReady(true)).catch(console.error);
     }, []);
@@ -134,7 +127,6 @@ export function ArchitectStep() {
         try {
             for (const file of Array.from(files)) {
                 if (file.type === 'application/pdf') {
-                    // Convert PDF to images
                     toast.info(language === 'zh' ? `正在处理 PDF: ${file.name}...` : `Processing PDF: ${file.name}...`);
                     const pdfImages = await convertPdfToImages(file);
 
@@ -150,7 +142,6 @@ export function ArchitectStep() {
                         ? `PDF 已转换为 ${pdfImages.length} 张图片`
                         : `PDF converted to ${pdfImages.length} images`);
                 } else if (file.type.startsWith('image/')) {
-                    // Read image directly
                     const reader = new FileReader();
                     const imageData = await new Promise<string>((resolve) => {
                         reader.onload = (e) => resolve(e.target?.result as string);
@@ -178,14 +169,24 @@ export function ArchitectStep() {
         }
     }, [language]);
 
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
+        setIsDragging(false);
         handleFileUpload(e.dataTransfer.files);
     }, [handleFileUpload]);
 
     const removeFile = (index: number) => {
         setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-        // For simplicity, clear all processed images when any file is removed
         const remainingFiles = uploadedFiles.filter((_, i) => i !== index);
         if (remainingFiles.length === 0) {
             setProcessedImages([]);
@@ -199,71 +200,90 @@ export function ArchitectStep() {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             className="max-w-4xl mx-auto"
         >
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                <div className="mb-4">
-                    <h2 className="text-lg font-semibold text-slate-900">
-                        {t('step1Title')}
-                    </h2>
-                    <p className="text-sm text-slate-500 mt-1">
-                        {t('step1Desc')}
-                    </p>
+            <div className={`glass-card rounded-2xl p-8 transition-all duration-300 ${isDragging ? 'ring-2 ring-amber-500/50 bg-black/60' : ''}`}>
+                <div className="mb-6 flex items-end justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-yellow-500">
+                            {t('step1Title')}
+                        </h2>
+                        <p className="text-slate-400 mt-2 font-light">
+                            {t('step1Desc')}
+                        </p>
+                    </div>
+                    {/* Character Count */}
+                    <div className="text-xs text-slate-500 font-mono">
+                        {paperContent.length} {language === 'zh' ? '字符' : 'chars'}
+                    </div>
                 </div>
 
                 {/* Unified Input Area */}
                 <div
-                    className="relative"
+                    className="relative group"
                     onDrop={handleDrop}
-                    onDragOver={(e) => e.preventDefault()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
                 >
                     {/* Text Input */}
                     <Textarea
                         value={paperContent}
                         onChange={(e) => setPaperContent(e.target.value)}
                         placeholder={t('paperPlaceholder')}
-                        className="min-h-[300px] resize-none border-slate-200 focus:ring-2 focus:ring-indigo-500/20 font-mono text-sm pb-16"
+                        className="glass-input min-h-[350px] resize-none rounded-xl p-6 font-mono text-sm leading-relaxed pb-20 transition-all focus:ring-2 focus:ring-amber-500/30"
                     />
 
+                    {/* Drag Overlay Hint */}
+                    {isDragging && (
+                        <div className="absolute inset-0 bg-amber-500/10 backdrop-blur-sm rounded-xl flex items-center justify-center border-2 border-dashed border-amber-500/50 z-10 pointer-events-none">
+                            <div className="text-amber-200 font-medium flex flex-col items-center gap-2">
+                                <UploadCloud className="w-10 h-10" />
+                                <p>{language === 'zh' ? '释放以上传文件' : 'Drop files to upload'}</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Bottom Toolbar */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                        {/* Attachment Button */}
-                        <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isProcessingFiles || !pdfJsReady}
-                            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                            {isProcessingFiles ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Paperclip className="w-4 h-4" />
+                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between p-2 bg-black/20 backdrop-blur-md rounded-lg border border-white/5">
+                        <div className="flex items-center gap-3">
+                            {/* Attachment Button */}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isProcessingFiles || !pdfJsReady}
+                                className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/10 rounded-md transition-all disabled:opacity-50 group"
+                            >
+                                {isProcessingFiles ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                                ) : (
+                                    <Paperclip className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                                )}
+                                {language === 'zh' ? '添加附件' : 'Add Attachment'}
+                            </button>
+
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".pdf,.png,.jpg,.jpeg,image/*,application/pdf"
+                                multiple
+                                className="hidden"
+                                onChange={(e) => handleFileUpload(e.target.files)}
+                            />
+
+                            {/* Image count */}
+                            {processedImages.length > 0 && (
+                                <span className="text-xs px-2 py-1 bg-amber-500/20 text-amber-300 rounded border border-amber-500/30 font-medium">
+                                    {processedImages.length} {language === 'zh' ? '张图片' : 'images'}
+                                </span>
                             )}
-                            {language === 'zh' ? '添加附件' : 'Add Attachment'}
-                        </button>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".pdf,.png,.jpg,.jpeg,image/*,application/pdf"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => handleFileUpload(e.target.files)}
-                        />
+                        </div>
 
-                        {/* Image count */}
-                        {processedImages.length > 0 && (
-                            <span className="text-xs text-indigo-600 font-medium">
-                                {processedImages.length} {language === 'zh' ? '张图片' : 'images'}
-                            </span>
-                        )}
-
-                        {/* Character Count */}
-                        <span className="text-xs text-slate-400">
-                            {paperContent.length} {language === 'zh' ? '字符' : 'chars'}
-                        </span>
+                        <div className="text-xs text-slate-500 pr-2 hidden sm:block">
+                            {language === 'zh' ? '支持 PDF / PNG / JPG' : 'Supports PDF / PNG / JPG'}
+                        </div>
                     </div>
                 </div>
 
@@ -274,45 +294,55 @@ export function ArchitectStep() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            className="mt-4"
+                            className="mt-6"
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-sm font-medium text-slate-700">
-                                    {language === 'zh' ? '已添加附件:' : 'Attachments:'}
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-slate-400" />
+                                    {language === 'zh' ? '已添加文件' : 'Attached Files'}
                                 </p>
                                 <button
                                     onClick={clearAllFiles}
-                                    className="text-xs text-red-500 hover:text-red-700"
+                                    className="text-xs px-2 py-1 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded transition-colors"
                                 >
                                     {language === 'zh' ? '清除全部' : 'Clear all'}
                                 </button>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                 {uploadedFiles.map((file, index) => (
                                     <motion.div
                                         key={index}
                                         initial={{ opacity: 0, scale: 0.9 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
-                                        className="relative group flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-lg border border-slate-200"
+                                        className="relative group flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors cursor-default"
                                     >
-                                        {file.preview ? (
-                                            <img
-                                                src={file.preview}
-                                                alt={file.name}
-                                                className="w-8 h-8 object-cover rounded"
-                                            />
-                                        ) : file.type.includes('pdf') ? (
-                                            <FileText className="w-4 h-4 text-red-500 flex-shrink-0" />
-                                        ) : (
-                                            <ImageIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                                        )}
-                                        <span className="text-sm text-slate-600 max-w-[150px] truncate">
-                                            {file.name}
-                                        </span>
+                                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0">
+                                            {file.preview ? (
+                                                <img
+                                                    src={file.preview}
+                                                    alt={file.name}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : file.type.includes('pdf') ? (
+                                                <FileText className="w-5 h-5 text-red-400" />
+                                            ) : (
+                                                <ImageIcon className="w-5 h-5 text-blue-400" />
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium text-slate-300 truncate" title={file.name}>
+                                                {file.name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                                                {(file.base64.length / 1024 / 1.33).toFixed(1)} KB
+                                            </p>
+                                        </div>
+
                                         <button
                                             onClick={() => removeFile(index)}
-                                            className="ml-1 w-5 h-5 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                            className="absolute -top-1 -right-1 w-5 h-5 bg-slate-800 text-slate-400 hover:text-white hover:bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md transform scale-90 group-hover:scale-100"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -323,33 +353,35 @@ export function ArchitectStep() {
                     )}
                 </AnimatePresence>
 
-                {/* Hint */}
-                <p className="mt-3 text-xs text-slate-400">
-                    {language === 'zh'
-                        ? '💡 提示：可以同时输入文字描述和上传文档（PDF/图片），PDF 会自动转换为图片发送给 AI'
-                        : '💡 Tip: You can enter text and upload documents (PDF/images). PDFs will be automatically converted to images.'}
-                </p>
-
                 {/* Generate Button */}
-                <div className="mt-6 flex justify-end">
+                <div className="mt-8 flex justify-end">
                     <Button
                         onClick={handleGenerate}
                         disabled={isGenerating || isProcessingFiles || (!paperContent.trim() && processedImages.length === 0)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white active:scale-95 transition-transform"
+                        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-semibold px-8 py-6 rounded-xl shadow-lg shadow-amber-900/20 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
                         {isGenerating ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                 {t('generating')}
                             </>
                         ) : (
                             <>
-                                <Sparkles className="w-4 h-4 mr-2" />
+                                <Sparkles className="w-5 h-5 mr-2" />
                                 {t('generateBlueprint')}
                             </>
                         )}
                     </Button>
                 </div>
+            </div>
+
+            {/* Hint Text */}
+            <div className="mt-4 text-center">
+                <p className="text-xs text-slate-500/80">
+                    {language === 'zh'
+                        ? '💡 AI 将基于您的输入生成符合 NeurIPS / CVPR 标准的学术图表'
+                        : '💡 AI will generate academic diagrams following NeurIPS / CVPR standards based on your input'}
+                </p>
             </div>
         </motion.div>
     );
