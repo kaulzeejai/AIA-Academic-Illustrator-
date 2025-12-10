@@ -21,6 +21,8 @@
 
 ---
 
+## ✨ 效果展示
+
 ![效果图](frontend/demo_screenshot.png)
 
 ## ✨ 功能特点
@@ -110,6 +112,10 @@ Supports GPT-5.1 / DeepSeek / Gemini and more
 
 ---
 
+## ✨ Demo
+
+![Demo](frontend/demo_screenshot.png)
+
 ## ✨ Features
 
 - 📄 **Smart Analysis** - Text input + PDF/image upload
@@ -144,6 +150,14 @@ Visit http://localhost:3000
 > Note: Set Root Directory to `frontend` when deploying
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/qwwzdyj/AIA-Academic-Illustrator-)
+
+## 🤝 Acknowledgements
+
+Special thanks to the original author and community:
+
+- **Author**: [@BAIKEMARK](https://github.com/BAIKEMARK)
+- **Original Article**: [Click to view](https://blog.051088.xyz/posts/25120721/)
+- **Community**: Datawhale
 
 ## 📄 License
 
