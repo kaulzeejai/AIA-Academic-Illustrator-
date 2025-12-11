@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { indexedDBStorage } from '@/lib/storage';
 
 export interface ModelConfig {
     baseUrl: string;
@@ -65,33 +66,10 @@ const defaultVisionConfig: ModelConfig = {
 };
 
 // Maximum number of history items with images (to prevent storage overflow)
-const MAX_HISTORY_ITEMS = 2;
+// Maximum number of history items with images (IndexedDB can handle more)
+const MAX_HISTORY_ITEMS = 20;
 
-// Safe localStorage wrapper with quota handling
-const safeStorage = {
-    getItem: (name: string): string | null => {
-        try {
-            return localStorage.getItem(name);
-        } catch {
-            return null;
-        }
-    },
-    setItem: (name: string, value: string): void => {
-        try {
-            localStorage.setItem(name, value);
-        } catch (e) {
-            console.warn('localStorage quota exceeded:', e);
-            throw e;
-        }
-    },
-    removeItem: (name: string): void => {
-        try {
-            localStorage.removeItem(name);
-        } catch {
-            // Ignore errors
-        }
-    },
-};
+// Safe localStorage wrapper removed in favor of IndexedDB
 
 export const useWorkflowStore = create<WorkflowState>()(
     persist(
@@ -138,11 +116,6 @@ export const useWorkflowStore = create<WorkflowState>()(
 
             addToHistory: (item) => {
                 const state = get();
-                // Don't add if at limit
-                if (state.history.length >= MAX_HISTORY_ITEMS) {
-                    console.warn('History limit reached, cannot add new item');
-                    return;
-                }
 
                 const newItem: HistoryItem = {
                     ...item,
@@ -150,13 +123,10 @@ export const useWorkflowStore = create<WorkflowState>()(
                     timestamp: Date.now(),
                 };
 
-                const newHistory = [newItem, ...state.history];
+                // Add new item and keep only the latest MAX_HISTORY_ITEMS
+                const newHistory = [newItem, ...state.history].slice(0, MAX_HISTORY_ITEMS);
 
-                try {
-                    set({ history: newHistory });
-                } catch (e) {
-                    console.warn('Failed to save to history:', e);
-                }
+                set({ history: newHistory });
             },
 
             loadFromHistory: (id) => {
@@ -188,7 +158,7 @@ export const useWorkflowStore = create<WorkflowState>()(
         }),
         {
             name: 'academic-illustrator-storage',
-            storage: createJSONStorage(() => safeStorage),
+            storage: createJSONStorage(() => indexedDBStorage),
             partialize: (state) => ({
                 logicConfig: state.logicConfig,
                 visionConfig: state.visionConfig,

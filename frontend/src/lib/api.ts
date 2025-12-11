@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 
 export interface ModelConfig {
     baseUrl: string;
@@ -91,9 +92,28 @@ export async function generateSchema(
     config: ModelConfig,
     inputImages?: string[]
 ): Promise<GenerateSchemaResponse> {
+    // Check if we should use Google Native API
+    // Use Native API if model name starts with 'gemini' and we are likely hitting Google (or if URL implies it)
+    // We'll prioritize Native if the model makes sense for it.
+    const isGoogleModel = config.modelName.toLowerCase().startsWith('gemini');
+    const isGoogleEndpoint = config.baseUrl.includes('googleapis.com') || config.baseUrl.includes('goog') || !config.baseUrl;
+
+    if (isGoogleModel && isGoogleEndpoint) {
+        return await generateSchemaGoogleNative(paperContent, config, inputImages);
+    }
+
+    // Normalize Base URL: Ensure it ends with /v1 if it's a custom OpenAI endpoint and missing it
+    // (unless it's Google, which uses a different format handled above)
+    let finalBaseUrl = config.baseUrl;
+    if (!isGoogleModel && !finalBaseUrl.includes('googleapis') && !finalBaseUrl.endsWith('/v1') && !finalBaseUrl.endsWith('/v1/')) {
+        // Simple heuristic: if it doesn't look like it has a version path, append /v1
+        // This helps with users entering 'https://yunwu.ai' instead of 'https://yunwu.ai/v1'
+        finalBaseUrl = finalBaseUrl.replace(/\/$/, '') + '/v1';
+    }
+
     const client = new OpenAI({
         apiKey: config.apiKey,
-        baseURL: config.baseUrl,
+        baseURL: finalBaseUrl,
         dangerouslyAllowBrowser: true, // Allow browser usage
     });
 
@@ -127,18 +147,78 @@ export async function generateSchema(
         max_tokens: 4096,
     });
 
-    const schema = response.choices[0]?.message?.content || '';
+    const schema = response.choices?.[0]?.message?.content || '';
     return { schema };
 }
 
 /**
- * Render image from Visual Schema using OpenAI-compatible API
+ * Generate Visual Schema using Google Native GenAI SDK
+ */
+async function generateSchemaGoogleNative(
+    paperContent: string,
+    config: ModelConfig,
+    inputImages?: string[]
+): Promise<GenerateSchemaResponse> {
+    try {
+        const ai = new GoogleGenAI({ apiKey: config.apiKey });
+        const prompt = ARCHITECT_PROMPT_TEMPLATE.replace('{paper_content}', paperContent);
+
+        const contents: any[] = [prompt];
+
+        if (inputImages && inputImages.length > 0) {
+            // Convert data URLs to inlineData parts
+            // Format: data:image/png;base64,....
+            inputImages.forEach(img => {
+                const match = img.match(/^data:(image\/[a-z]+);base64,(.+)$/);
+                if (match) {
+                    contents.push({
+                        inlineData: {
+                            mimeType: match[1],
+                            data: match[2]
+                        }
+                    });
+                }
+            });
+        }
+
+        const response = await ai.models.generateContent({
+            model: config.modelName,
+            contents: contents.length === 1 ? contents[0] : contents,
+        });
+
+        // Extract text
+        let schema = '';
+        if (response.candidates && response.candidates[0]?.content?.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.text) {
+                    schema += part.text;
+                }
+            }
+        }
+        return { schema };
+
+    } catch (error: any) {
+        console.error("Google Native Schema Gen Error:", error);
+        throw new Error(`Google Native API Failed: ${error.message}`);
+    }
+}
+
+/**
+ * Render image from Visual Schema using OpenAI-compatible API or Google Native API
  */
 export async function renderImage(
     visualSchema: string,
     config: ModelConfig,
     referenceImages?: string[]
 ): Promise<RenderImageResponse> {
+
+    // Check if we should use Google Native API (e.g. for gemini-3-pro-image-preview)
+    const isGoogleNative = config.modelName.includes('gemini-3') && config.modelName.includes('image-preview');
+
+    if (isGoogleNative) {
+        return await renderImageGoogleNative(visualSchema, config);
+    }
+
     const client = new OpenAI({
         apiKey: config.apiKey,
         baseURL: config.baseUrl,
@@ -198,4 +278,51 @@ export async function renderImage(
 
     // If no image found, return text response
     return { imageUrl: null, text: resultContent };
+}
+
+/**
+ * Render image using Google Native GenAI SDK (@google/genai)
+ * Specifically for models like gemini-3-pro-image-preview
+ */
+async function renderImageGoogleNative(
+    visualSchema: string,
+    config: ModelConfig
+): Promise<RenderImageResponse> {
+    try {
+        const ai = new GoogleGenAI({ apiKey: config.apiKey });
+
+        // Construct prompt similar to normal flow
+        const prompt = RENDERER_PROMPT_TEMPLATE.replace('{visual_schema_content}', visualSchema);
+
+        const response = await ai.models.generateContent({
+            model: config.modelName,
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }], // As per user example
+                imageConfig: {
+                    aspectRatio: "16:9",
+                    imageSize: "4K" // Assuming high quality requested
+                }
+            }
+        });
+
+        // Extract image from response
+        if (response.candidates && response.candidates[0].content.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.data) {
+                    const base64Image = part.inlineData.data;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    return {
+                        imageUrl: `data:${mimeType};base64,${base64Image}`
+                    };
+                }
+            }
+        }
+
+        return { imageUrl: null, text: "No image generated in Google Native response." };
+
+    } catch (error: any) {
+        console.error("Google Native API Error:", error);
+        throw new Error(`Google Native API Failed: ${error.message}`);
+    }
 }
