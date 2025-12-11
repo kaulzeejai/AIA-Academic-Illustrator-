@@ -91,7 +91,7 @@ npm run dev
 
 <div align="center">
 
-![AIA Logo](frontend/image.png)
+[![AIA Logo](frontend/image.png)](https://aia-academic-illustrator.vercel.app)
 
 [简体中文](#) | English
 
@@ -151,13 +151,17 @@ Visit http://localhost:3000
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/qwwzdyj/AIA-Academic-Illustrator-)
 
+## 📚 Tutorial & Resources
+
+- **Video Tutorial**: [Bilibili - Deepseek + Gemini Scientific Figure Workflow](https://www.bilibili.com/video/BV1bMm3BYEKD/?share_source=copy_web&vd_source=bea77ed0ad9ac826c1d942b45b9962c8)
+
 ## 🤝 Acknowledgements
 
 Special thanks to the original author and community:
 
-- **Author**: [@BAIKEMARK](https://github.com/BAIKEMARK)
-- **Original Article**: [Click to view](https://blog.051088.xyz/posts/25120721/)
-- **Community**: Datawhale
+- **Original Author**: [@BAIKEMARK](https://github.com/BAIKEMARK)
+- **Original Article**: [WeChat Article / Blog](https://blog.051088.xyz/posts/25120721/)
+- **Community Support**: Datawhale
 
 ## 📄 License
 
