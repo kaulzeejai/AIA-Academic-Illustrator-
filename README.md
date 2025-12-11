@@ -45,6 +45,19 @@
 
 > 💡 提示：两个模型都可以通过 OpenAI 格式的 API 代理调用
 
+## 📚 教程与资源
+
+- **视频教程**: [Bilibili - Deepseek + Gemini 科研绘图工作流](https://www.bilibili.com/video/BV1bMm3BYEKD/?share_source=copy_web&vd_source=bea77ed0ad9ac826c1d942b45b9962c8)
+- **研发作者**: 感谢该教程作者提供的灵感与工作流验证
+
+## 🤝 致谢
+
+特别感谢原创作者及社区的支持：
+
+- **原创作者**: [@BAIKEMARK](https://github.com/BAIKEMARK)
+- **原创文章**: [微信文章 / 博客](https://blog.051088.xyz/posts/25120721/)
+- **社区支持**: Datawhale
+
 ## 🛠️ 技术栈
 
 ![Next.js](https://img.shields.io/badge/Next.js-black?style=flat-square&logo=next.js)
