@@ -11,9 +11,9 @@
 
 **✨ AI 驱动的学术图表自动生成工具**
 
-支持 GPT-5.1 / DeepSeek / Gemini 等多种模型
+支持 GPT + Gemini / DeepSeek 等多种模型
 
-[在线体验](https://aia-academic-illustrator.vercel.app) / [本地部署](#-本地开发) / [问题反馈](https://github.com/qwwzdyj/AIA-Academic-Illustrator-/issues)
+[在线体验](https://aia-academic-illustrator.vercel.app) / [本地部署](#-本地开发) / [视频教程](https://www.bilibili.com/video/BV1bMm3BYEKD/) / [问题反馈](https://github.com/qwwzdyj/AIA-Academic-Illustrator-/issues)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/qwwzdyj/AIA-Academic-Illustrator-)
 
