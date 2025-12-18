@@ -214,14 +214,10 @@ export async function renderImage(
     referenceImages?: string[]
 ): Promise<RenderImageResponse> {
 
-    // Check if we should use Google Native API (e.g. for gemini-3-pro-image-preview)
-    // Check if we should use Google Native API (e.g. for gemini-3-pro-image-preview)
-    // ONLY use Native API if it's a Google endpoint. If it's a proxy (like yunwu.ai), use OpenAI client.
-    const isGoogleModel = config.modelName.toLowerCase().includes('gemini');
-    const isGoogleEndpoint = config.baseUrl.includes('googleapis.com') || config.baseUrl.includes('goog') || !config.baseUrl;
-    const shouldUseNative = isGoogleModel && isGoogleEndpoint && config.modelName.includes('gemini-3');
+    // If using Google's official API (googleapis.com), use Google Native SDK directly
+    const isGoogleEndpoint = config.baseUrl.includes('googleapis.com');
 
-    if (shouldUseNative) {
+    if (isGoogleEndpoint) {
         return await renderImageGoogleNative(visualSchema, config);
     }
 
