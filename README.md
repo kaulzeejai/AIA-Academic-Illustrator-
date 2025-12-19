@@ -13,9 +13,15 @@
 
 支持 GPT + Gemini / DeepSeek 等多种模型
 
-[在线体验](https://aia-academic-illustrator.vercel.app) / [本地部署](#-本地开发) / [视频教程](https://www.bilibili.com/video/BV1bMm3BYEKD/) / [问题反馈](https://github.com/qwwzdyj/AIA-Academic-Illustrator-/issues)
+[在线体验](https://aia-academic-illustrator.vercel.app) / [ESA 加速版](https://aia.6b4dd083.er.aliyun-esa.net) / [本地部署](#-本地开发) / [视频教程](https://www.bilibili.com/video/BV1bMm3BYEKD/) / [问题反馈](https://github.com/qwwzdyj/AIA-Academic-Illustrator-/issues)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/qwwzdyj/AIA-Academic-Illustrator-)
+
+---
+
+**🚀 本项目由阿里云 ESA 提供加速、计算和保护**
+
+[![Alibaba Cloud ESA](frontend/O1CN01H1UU3i1Cti9lYtFrs_!!6000000000139-2-tps-7534-844.png)](https://aia.6b4dd083.er.aliyun-esa.net)
 
 </div>
 
